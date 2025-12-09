@@ -18,9 +18,6 @@ FROM nginx:alpine
 # Copia o build para a pasta do Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Remove a configuração padrão e adiciona a nossa (opcional)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # Expõe a porta padrão do Nginx
 EXPOSE 8080
 
