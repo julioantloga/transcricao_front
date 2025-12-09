@@ -187,7 +187,7 @@ export default function App() {
                 marginBottom: 16
               }}
             >
-              {["audio", "converter", "transcription", "total"].map((key) => (
+              {["audio", "conversion", "transcription", "total"].map((key) => (
                 <div
                   key={key}
                   className="card"
@@ -198,7 +198,7 @@ export default function App() {
                     color: "var(--text)"
                   }}
                 >
-                  <strong>{key.charAt(0).toUpperCase() + key.slice(1)}</strong>
+                  <strong>{key.charAt(0).toUpperCase() + key.slice(1)} time</strong>
                   <br />
                   {formatTempoSeguro(metrics[key])}
                 </div>
@@ -217,7 +217,7 @@ export default function App() {
                   fontSize: 14
                 }}
               >
-                <strong>Eficácia</strong>
+                <strong>Performance</strong>
                 <br />
                 {typeof metrics.eficacia === "number"
                   ? (metrics.eficacia * 100).toFixed(2)
