@@ -13,7 +13,6 @@ export default function App() {
   const [erro, setErro] = useState(null);
   const [diarizacao, setDiarizacao] = useState(false);
   const [statusTexto, setStatusTexto] = useState(null);
-  
   const [metrics, setMetrics] = useState(null);
 
   const [form, setForm] = useState({
@@ -27,10 +26,13 @@ export default function App() {
   const [parecer, setParecer] = useState(null);
   const [loadingParecer, setLoadingParecer] = useState(false);
 
-  function formatTempo(segundos) {
-    return segundos > 59
-      ? `${(segundos / 60).toFixed(1)} min`
-      : `${segundos.toFixed(1)}s`;
+  // ✅ função segura
+  function formatTempoSeguro(valor) {
+    return typeof valor === "number"
+      ? valor > 59
+        ? `${(valor / 60).toFixed(1)} min`
+        : `${valor.toFixed(1)}s`
+      : "-";
   }
 
   async function handleFinish({ file }) {
@@ -41,7 +43,6 @@ export default function App() {
     setMetrics(null);
 
     try {
-      // 1. Envia o arquivo para o backend
       const form = new FormData();
       form.append("audio", file);
       form.append("diarizacao", diarizacao);
@@ -55,7 +56,6 @@ export default function App() {
 
       if (!id) throw new Error("Erro ao iniciar transcrição");
 
-      // 2. Inicia verificação periódica
       let intervalo;
       const checkStatus = async () => {
         const res = await fetch(`${BASE_URL}/status/${id}`);
@@ -68,7 +68,7 @@ export default function App() {
           return;
         }
 
-        setStatusTexto(status.status); // <-- adicionar um state novo!
+        setStatusTexto(status.status);
 
         if (status.pronto) {
           clearInterval(intervalo);
@@ -79,15 +79,14 @@ export default function App() {
         }
       };
 
-      checkStatus(); // chamada inicial
-      intervalo = setInterval(checkStatus, 3000); // a cada 3s
+      checkStatus();
+      intervalo = setInterval(checkStatus, 3000);
     } catch (err) {
       console.error("Erro na transcrição:", err);
       setErro("Erro ao transcrever áudio.");
       setLoading(false);
     }
   }
-
 
   async function handleFileUpload(event) {
     const file = event.target.files[0];
@@ -201,14 +200,18 @@ export default function App() {
                 >
                   <strong>{key.charAt(0).toUpperCase() + key.slice(1)}</strong>
                   <br />
-                  {formatTempo(metrics[key])}
+                  {formatTempoSeguro(metrics[key])}
                 </div>
               ))}
 
               <div
                 className="card"
                 style={{
-                  background: metrics.eficacia < 0.5 ? "#f85149" : "#58a6ff",
+                  background:
+                    typeof metrics.eficacia === "number" &&
+                    metrics.eficacia < 0.5
+                      ? "#f85149"
+                      : "#58a6ff",
                   color: "#000",
                   padding: "8px 12px",
                   fontSize: 14
@@ -216,7 +219,10 @@ export default function App() {
               >
                 <strong>Eficácia</strong>
                 <br />
-                { typeof metrics.eficacia === 'number' ? (metrics.eficacia * 100).toFixed(2) : "-" } %
+                {typeof metrics.eficacia === "number"
+                  ? (metrics.eficacia * 100).toFixed(2)
+                  : "-"}{" "}
+                %
               </div>
             </div>
           )}
