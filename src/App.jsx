@@ -12,7 +12,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
   const [diarizacao, setDiarizacao] = useState(false);
-
+  const [statusTexto, setStatusTexto] = useState(null);
+  
   const [metrics, setMetrics] = useState(null);
 
   const [form, setForm] = useState({
@@ -40,20 +41,53 @@ export default function App() {
     setMetrics(null);
 
     try {
-      const data = await transcreverAudio(file, diarizacao);
-      localStorage.removeItem("transcricao");
-      setResultado(data);
+      // 1. Envia o arquivo para o backend
+      const form = new FormData();
+      form.append("audio", file);
+      form.append("diarizacao", diarizacao);
 
-      if (data.metrics) {
-        setMetrics(data.metrics);
-      }
+      const uploadRes = await fetch(`${BASE_URL}/upload`, {
+        method: "POST",
+        body: form,
+      });
+
+      const { id } = await uploadRes.json();
+
+      if (!id) throw new Error("Erro ao iniciar transcrição");
+
+      // 2. Inicia verificação periódica
+      let intervalo;
+      const checkStatus = async () => {
+        const res = await fetch(`${BASE_URL}/status/${id}`);
+        const status = await res.json();
+
+        if (status.erro) {
+          setErro(status.erro);
+          clearInterval(intervalo);
+          setLoading(false);
+          return;
+        }
+
+        setStatusTexto(status.status); // <-- adicionar um state novo!
+
+        if (status.pronto) {
+          clearInterval(intervalo);
+          setLoading(false);
+          setResultado({ text: status.transcricao });
+          setMetrics(status.metrics || null);
+          localStorage.removeItem("transcricao");
+        }
+      };
+
+      checkStatus(); // chamada inicial
+      intervalo = setInterval(checkStatus, 3000); // a cada 3s
     } catch (err) {
       console.error("Erro na transcrição:", err);
       setErro("Erro ao transcrever áudio.");
-    } finally {
       setLoading(false);
     }
   }
+
 
   async function handleFileUpload(event) {
     const file = event.target.files[0];
@@ -134,7 +168,7 @@ export default function App() {
         <div className="card scroll">
           <h2>Transcrição</h2>
 
-          {loading && <p>Processando áudio...</p>}
+          {loading && <p>{statusTexto || "Processando áudio..."}</p>}
           {erro && <p style={{ color: "red" }}>{erro}</p>}
 
           {!loading && !resultado && (
