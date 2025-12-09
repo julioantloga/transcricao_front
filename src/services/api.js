@@ -18,9 +18,9 @@ export async function transcreverAudio(file, diarizacao) {
     throw new Error("Resposta inválida do servidor.");
   }
 
-  /*if (!response.ok) {
+  if (!response.ok) {
     throw new Error(data?.error || "Erro na transcrição");
-  }*/
+  }
 
   return data;
 }

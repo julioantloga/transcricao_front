@@ -216,7 +216,7 @@ export default function App() {
               >
                 <strong>Eficácia</strong>
                 <br />
-                {(metrics.eficacia * 100).toFixed(0)}%
+                { typeof metrics.eficacia === 'number' ? (metrics.eficacia * 100).toFixed(2) : "-" } %
               </div>
             </div>
           )}
