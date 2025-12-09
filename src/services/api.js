@@ -6,7 +6,7 @@ export async function transcreverAudio(file, diarizacao) {
   form.append("audio", file);
   form.append("diarizacao", diarizacao);
 
-  const response = await fetch(`${BASE_URL}/transcribe`, {
+  const response = await fetch(`${BASE_URL}/upload`, {
     method: "POST",
     body: form
   });
