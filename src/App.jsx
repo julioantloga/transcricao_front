@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function App() {
   const [resultado, setResultado] = useState(() => {
-    const textoSalvo = localStorage.getItem("transcricao");
+    const textoSalvo = localStorage.getItem("transcript");
     return textoSalvo ? { text: textoSalvo } : null;
   });
   const [loading, setLoading] = useState(false);
@@ -16,10 +16,11 @@ export default function App() {
   const [metrics, setMetrics] = useState(null);
 
   const [form, setForm] = useState({
+    job_title: "",
     job_description: "",
     notes: "",
     interview_roadmap: "",
-    job_responsabilities: "",
+    job_responsibilities: "",
     company_values: ""
   });
 
@@ -75,7 +76,7 @@ export default function App() {
           setLoading(false);
           setResultado({ text: status.transcricao });
           setMetrics(status.metrics || null);
-          localStorage.removeItem("transcricao");
+          localStorage.removeItem("transcript");
         }
       };
 
@@ -100,7 +101,7 @@ export default function App() {
     await handleFinish({ file });
   }
 
-  async function handleSubmitParecer(e) {
+  async function handleSubmitParecer(e) { 
     e.preventDefault();
     setLoadingParecer(true);
     setParecer(null);
@@ -110,13 +111,21 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          transcript: resultado?.text,
-          ...form
+          job_title: form.job_title,
+          transcript: resultado?.text || null,
+          job_description: form.job_description,
+          job_responsabilities: form.job_responsibilities,
+          interview_roadmap: form.interview_roadmap,
+          company_values: form.company_values,
+          notes: form.notes,
+          metrics: metrics || null,
+          audio_path: resultado?.audioPath || null
         })
       });
 
       const json = await res.json();
       setParecer(json.review);
+
     } catch (err) {
       console.error("Erro ao gerar parecer:", err);
       setParecer("❌ Erro ao gerar parecer.");
@@ -229,6 +238,30 @@ export default function App() {
 
           {/* Formulário com transcrição + inputs */}
           <form onSubmit={handleSubmitParecer} style={{ marginTop: 24 }}>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", marginBottom: 6 }}>
+                Nome da Vaga
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ex: Vendedor SDR Jr"
+                style={{
+                  width: "100%",
+                  padding: 8,
+                  background: "var(--bg)",
+                  color: "var(--text)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 6
+                }}
+                value={form.job_title}
+                onChange={(e) =>
+                  setForm({ ...form, job_title: e.target.value })
+                }
+              />
+            </div>
+
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", marginBottom: 6 }}>
                 Transcrição da Entrevista
@@ -249,17 +282,17 @@ export default function App() {
                 onChange={(e) => {
                   const texto = e.target.value;
                   setResultado((prev) => ({ ...prev, text: texto }));
-                  localStorage.setItem("transcricao", texto);
+                  localStorage.setItem("transcript", texto);
                 }}
               />
             </div>
 
             {[
               { label: "Descrição da Vaga", key: "job_description" },
-              { label: "Anotações", key: "notes" },
+              { label: "Atividades da Vaga", key: "job_responsibilities" },
               { label: "Roteiro da Entrevista", key: "interview_roadmap" },
-              { label: "Atividades da Vaga", key: "job_responsabilities" },
-              { label: "Valores da empresa", key: "company_values" }
+              { label: "Valores da empresa", key: "company_values" },
+              { label: "Parecer da pessoa recrutadora", key: "notes" }
             ].map(({ label, key }) => (
               <div key={key} style={{ marginBottom: 16 }}>
                 <label style={{ display: "block", marginBottom: 6 }}>
