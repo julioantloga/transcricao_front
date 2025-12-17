@@ -28,29 +28,23 @@ export default function InterviewTypes() {
         </button>
       </div>
       
-      <div className="card">  
+      <div className="card">
+        <h2>Tipos de entrevista:</h2> 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-            <tr>
-                <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>
-                Tipos cadastrados
-                </th>
-                <th></th>
-            </tr>
-            </thead>
             <tbody>
             {types.map((t) => (
                 <tr key={t.id}>
-                <td style={{ padding: "8px 0" }}>{t.name}</td>
-                <td>
-                    <button onClick={() => navigate(`/settings/interview_types/${t.id}`)}>
-                    Editar
-                    </button>
-                </td>
+                  <td style={{ padding: "8px 0" }}>{t.name}</td>
+                  <td style={{ width:70 }}>
+                      <button onClick={() => navigate(`/settings/interview_types/${t.id}`)}>
+                      Editar
+                      </button>
+                  </td>
                 </tr>
             ))}
             </tbody>
         </table>
+
     </div>    
 </div>
   );

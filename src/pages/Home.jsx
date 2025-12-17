@@ -38,8 +38,7 @@ export default function Home() {
         className="card"
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
+          justifyContent: "space-between"
         }}>
           
         <div style={{height: 130, marginLeft:20, color:"#ffffffff" }}>
