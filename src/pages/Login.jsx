@@ -1,7 +1,7 @@
 // front/src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logoMind from "@/assets/logo_mind.png";
+import logoMind from "../assets/logo_mind.png";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 

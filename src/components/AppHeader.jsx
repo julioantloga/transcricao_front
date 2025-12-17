@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { createInterview } from "../services/api";
-import logoMind from "@/assets/logo_mind.png";
+import logoMind from "../assets/logo_mind.png";
 
 export default function AppHeader() {
     const navigate = useNavigate();
