@@ -1,6 +1,7 @@
 // front/src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logoMind from "@/assets/logo_mind.png";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -41,7 +42,7 @@ export default function Login() {
   return (
     <div style={{ maxWidth: 400, margin: "80px auto", padding: 24 }}>
         <img
-          src="./src/assets/logo_mind.png"
+          src={logoMind}
           alt="Logo"
           style={{ height: 32, marginBottom: 20 }}
         />

@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { createInterview } from "../services/api";
-
+import logoMind from "@/assets/logo_mind.png";
 
 export default function AppHeader() {
     const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function AppHeader() {
         {/* LOGO + USER */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <img
-            src="./src/assets/logo_mind.png" // ajuste o caminho conforme o seu
+            src={logoMind}
             alt="Logo"
             style={{ height: 32 }}
         />
