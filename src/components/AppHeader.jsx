@@ -61,19 +61,19 @@ export default function AppHeader() {
         <div style={{ display: "flex", gap: 12 }}>
         {!isHome && (
             <button
-            onClick={() => navigate("/")}
-            style={{
+                onClick={() => navigate(-1)}
+                style={{
                 background: "#fff",
                 color: "#000",
                 padding: "8px 12px",
                 border: "1px solid #ccc",
                 borderRadius: 6,
                 cursor: "pointer"
-            }}
+                }}
             >
-            ← Voltar
+                ← Voltar
             </button>
-        )}
+            )}
 
         <button
             onClick={handleNewInterview}
@@ -82,8 +82,8 @@ export default function AppHeader() {
         </button>
 
         <button
-            onClick={() => navigate("/settings/interview_types")}
-        >
+            onClick={() => navigate("/settings")}
+            >
             Configurações
         </button>
 

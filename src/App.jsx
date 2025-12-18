@@ -7,6 +7,11 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import InterviewTypes from "./pages/InterviewTypes.jsx";
 import EditInterviewType from "./pages/EditInterviewType.jsx";
 import WithHeader from "./layouts/WithHeader.jsx";
+import Jobs from "./pages/Jobs.jsx";
+import EditJob from "./pages/EditJob.jsx";
+import InterviewScripts from "./pages/InterviewScripts.jsx";
+import EditInterviewScript from "./pages/EditInterviewScript.jsx";
+import ConfigMenu from "./pages/ConfigMenu.jsx";
 
 export default function App() {
   return (
@@ -19,7 +24,11 @@ export default function App() {
         <Route path="/interview_transcription" element={<ProtectedRoute> <WithHeader> <InterviewTranscription /> </WithHeader> </ProtectedRoute>} />
         <Route path="/settings/interview_types" element={<ProtectedRoute> <WithHeader> <InterviewTypes /> </WithHeader> </ProtectedRoute>} />
         <Route path="/settings/interview_types/:id" element={<ProtectedRoute> <WithHeader> <EditInterviewType /> </WithHeader> </ProtectedRoute>} />
-            
+        <Route path="/settings/jobs" element={<ProtectedRoute><WithHeader><Jobs /></WithHeader></ProtectedRoute>} />
+        <Route path="/settings/jobs/:id" element={<ProtectedRoute><WithHeader><EditJob /></WithHeader></ProtectedRoute>} />
+        <Route path="/settings/interview_scripts" element={<ProtectedRoute><WithHeader><InterviewScripts /></WithHeader></ProtectedRoute>} />
+        <Route path="/settings/interview_scripts/:id" element={<ProtectedRoute><WithHeader><EditInterviewScript /></WithHeader></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><WithHeader><ConfigMenu /></WithHeader></ProtectedRoute>} />    
       </Routes>
 
     </BrowserRouter>

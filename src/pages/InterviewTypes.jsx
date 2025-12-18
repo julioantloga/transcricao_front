@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function InterviewTypes() {
+
   const [types, setTypes] = useState([]);
   const navigate = useNavigate();
 
@@ -13,6 +14,17 @@ export default function InterviewTypes() {
       .then((res) => res.json())
       .then((data) => setTypes(data.types || []));
   }, []);
+
+  async function handleDelete(id) {
+    const confirm = window.confirm("Tem certeza que deseja excluir este tipo de entrevista?");
+    if (!confirm) return;
+
+    await fetch(`${BASE_URL}/interview_types/${id}`, {
+      method: "DELETE"
+    });
+
+    setTypes(types.filter(t => t.id !== id));
+  }
 
   return (
     <div className="layout" style={{ padding: 24 }}>
@@ -35,10 +47,16 @@ export default function InterviewTypes() {
             {types.map((t) => (
                 <tr key={t.id}>
                   <td style={{ padding: "8px 0" }}>{t.name}</td>
-                  <td style={{ width:70 }}>
-                      <button onClick={() => navigate(`/settings/interview_types/${t.id}`)}>
+                  <td style={{ width: 120 }}>
+                    <button onClick={() => navigate(`/settings/interview_types/${t.id}`)}>
                       Editar
-                      </button>
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      style={{ marginLeft: 8, background: "#f85149", color: "#fff" }}
+                    >X
+                    </button>
                   </td>
                 </tr>
             ))}

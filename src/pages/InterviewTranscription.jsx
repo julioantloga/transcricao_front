@@ -34,6 +34,8 @@ export default function InterviewTranscription() {
 
   const [interviewTypes, setInterviewTypes] = useState([]);
   const [interviewTypeId, setInterviewTypeId] = useState("none"); 
+  const [jobTouched, setJobTouched] = useState(false);
+  const [scriptTouched, setScriptTouched] = useState(false);
 
   const [diarizacao, setDiarizacao] = useState(false);
 
@@ -48,7 +50,14 @@ export default function InterviewTranscription() {
 
   const [audioFile, setAudioFile] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
+
   const [transcriptionId, setTranscriptionId] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [scripts, setScripts] = useState([]);
+
+  const [jobId, setJobId] = useState("none");
+  const [interviewScriptId, setInterviewScriptId] = useState("none");
+
 
 
   // ---------------------------------------------------------------------------
@@ -61,13 +70,16 @@ export default function InterviewTranscription() {
 
     fetch(`${BASE_URL}/interview_types?user_id=${userId}`)
       .then(res => res.json())
-      .then(data => {
-        setInterviewTypes(data.types || []);
-      })
-      .catch(err => {
-        console.error("Erro ao buscar tipos de entrevista", err);
-      });
+      .then(data => setInterviewTypes(data.types || []));
 
+    fetch(`${BASE_URL}/jobs?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => setJobs(data.jobs || []));
+
+    fetch(`${BASE_URL}/interview_scripts?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => setScripts(data.scripts || []));
+  
     fetch(`${BASE_URL}/interviews/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Vaga não encontrada");
@@ -95,6 +107,8 @@ export default function InterviewTranscription() {
         setFeedbackDado(item.review_feedback || null);
 
         setInterviewTypeId(item.interview_type_id ?? "none");
+        setJobId(item.job_id ?? "none");
+        setInterviewScriptId(item.interview_script_id ?? "none");
 
         if (item.audio_path) {
           const audioLink = `${BASE_URL}/uploads/${item.audio_path}`;
@@ -135,6 +149,53 @@ export default function InterviewTranscription() {
       alert("Erro ao enviar feedback");
       console.error(err);
     }
+  }
+
+  function handleJobChange(value) {
+    setJobTouched(true);
+    setJobId(value);
+
+    if (value === "none") return;
+
+    const selectedJob = jobs.find(
+      j => j.id === Number(value)
+    );
+
+    if (!selectedJob) return;
+
+    setForm(prev => ({
+      ...prev,
+      job_title: selectedJob.name || "",
+      job_description: selectedJob.job_description || "",
+      job_responsibilities: selectedJob.job_responsibilities || ""
+    }));
+  }
+
+  function handleScriptChange(value) {
+    setScriptTouched(true);
+    setInterviewScriptId(value);
+
+    // Personalizado
+    if (value === "custom") {
+      setForm(prev => ({
+        ...prev,
+        interview_roadmap: ""
+      }));
+      return;
+    }
+
+    if (value === "none") return;
+
+    const selectedScript = scripts.find(
+      s => s.id === Number(value)
+    );
+
+    if (!selectedScript) return;
+
+    setForm(prev => ({
+      ...prev,
+      interview_roadmap: selectedScript.interview_script || ""
+    }));
   }
 
   // ---------------------------------------------------------------------------
@@ -293,6 +354,8 @@ export default function InterviewTranscription() {
           transcript: resultado?.text || "",
           user_id: Number(localStorage.getItem("userId")),
           interview_type_id: interviewTypeId === "none" ? null : Number(interviewTypeId),
+          job_id: jobId === "none" ? null : Number(jobId),
+          interview_script_id: interviewScriptId === "none" ? null : Number(interviewScriptId),
           job_title: form.job_title,
           job_description: form.job_description,
           job_responsibilities: form.job_responsibilities,
@@ -432,69 +495,30 @@ export default function InterviewTranscription() {
           {/* FORMULÁRIO DE DADOS + GERAÇÃO DE PARECER */}
           <form onSubmit={handleSubmitParecer} style={{ marginTop: 24 }}>
 
-            <div className="card_session" >
-
-              <h2>1. Configurações da Entrevista</h2>
-              {/* Transcrição de áudio */}
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ display: "block", marginBottom: 6 }}>
-                  Transcrição da Entrevista
-                </label>
-                <textarea
-                  value={resultado?.text || ""}
-                  onChange={(e) => setResultado({ text: e.target.value })}
-                  style={{
-                    width: "100%",
-                    height: 150,
-                    resize: "vertical",
-                    padding: 8,
-                    background: "var(--bg)",
-                    color: "var(--text)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 6
-                  }}
-                />
-
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
-                    Parecer da pessoa recrutadora 
-                  </label>
-                  <textarea
-                    className="input_text"
-                    style={{ height: 150, width: "100%" }}
-                    value={form.notes}
-                    onChange={(e) =>
-                      setForm({ ...form, notes: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
-                    Roteiro da Entrevista 
-                  </label>
-                  <textarea
-                    className="input_text"
-                    style={{ height: 150, width: "100%" }}
-                    value={form.interview_roadmap}
-                    onChange={(e) =>
-                      setForm({ ...form, interview_roadmap: e.target.value })
-                    }
-                  />
-                </div>
-              
-              </div>  
-            </div>
-            
-            
             <div className="card_session">
 
-              <h2>2. Configurações da Vaga</h2>
-              {/* Nome da Vaga */}
+              <h2>1. Configurações da Vaga</h2>
+
+              <label style={{ display: "block", marginBottom: 6 }}>
+                  Selecionar vaga
+              </label>        
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6 }}>
-                  Nome da Vaga
-                </label>
+                <select
+                  className="input"
+                  value={jobId}
+                  onChange={e => handleJobChange(e.target.value)}
+                >
+                  <option value="none">Selecionar..</option>
+                  {jobs.map(j => (
+                    <option key={j.id} value={j.id}>
+                      {j.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Nome da Vaga */}
+              <div style={{ visibility:"hidden", display:"none" }}>
                 <input
                   type="text"
                   required
@@ -512,36 +536,6 @@ export default function InterviewTranscription() {
                   }}
                 />
               </div>
-
-              {/* Tipo de Entrevista */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", marginBottom: 6 }}>
-                  Tipo de Entrevista
-                </label>
-
-                <select
-                  className="input"
-                  value={interviewTypeId}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setInterviewTypeId(value);
-
-                    // regra: se não for "none", company_values vira null
-                    if (value !== "none") {
-                      setForm(prev => ({ ...prev, company_values: "" }));
-                    }
-                  }}
-                >
-                  <option value="none">Nenhum</option>
-
-                  {interviewTypes.map(type => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
 
               {/* Campos complementares */}
               {[
@@ -588,6 +582,101 @@ export default function InterviewTranscription() {
                 </div>
               )}
 
+            </div>
+
+            <div className="card_session" >
+              
+              <h2>2. Configurações da Entrevista</h2>
+              {/* Transcrição de áudio */}
+              
+              <div style={{ marginBottom: 32 }}>
+                <label style={{ display: "block", marginBottom: 6 }}>
+                  Transcrição
+                </label>
+                <textarea
+                  value={resultado?.text || ""}
+                  onChange={(e) => setResultado({ text: e.target.value })}
+                  style={{
+                    width: "100%",
+                    marginBottom: 16,
+                    height: 200,
+                    resize: "vertical",
+                    padding: 8,
+                    background: "var(--bg)",
+                    color: "var(--text)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 6
+                  }}
+                />
+
+               {/* Tipo de Entrevista */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: "block", marginBottom: 6 }}>
+                    Selecionar entrevista
+                  </label>
+
+                  <select
+                    className="input"
+                    value={interviewTypeId}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setInterviewTypeId(value);
+
+                      // regra: se não for "none", company_values vira null
+                      if (value !== "none") {
+                        setForm(prev => ({ ...prev, company_values: "" }));
+                      }
+                    }}
+                  >
+                    <option value="none">Nenhum</option>
+
+                    {interviewTypes.map(type => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: "block", marginBottom: 6 }}>Selecionar roteiro</label>
+                  <select
+                    className="input"
+                    value={interviewScriptId}
+                    onChange={e => handleScriptChange(e.target.value)}
+                  >
+                    <option value="none">Personaizado</option>
+                    {scripts.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <textarea
+                      className="input_text"
+                      style={{ height: 150, width: "100%", marginTop: 8}}
+                      value={form.interview_roadmap}
+                      onChange={(e) =>
+                        setForm({ ...form, interview_roadmap: e.target.value })
+                      }
+                  />
+                </div>   
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
+                    Parecer da pessoa recrutadora 
+                  </label>
+                  <textarea
+                    className="input_text"
+                    style={{ height: 150, width: "100%" }}
+                    value={form.notes}
+                    onChange={(e) =>
+                      setForm({ ...form, notes: e.target.value })
+                    }
+                  />
+                </div>
+ 
+              </div>  
             </div>
 
             <div className="card_session" >
