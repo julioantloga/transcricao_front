@@ -54,7 +54,7 @@ export default function EditJob() {
       });
     }
 
-    navigate("/settings/jobs");
+    navigate("/jobs");
   }
 
   return (

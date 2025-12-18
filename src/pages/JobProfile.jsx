@@ -16,7 +16,7 @@ export default function JobProfile() {
 
   useEffect(() => {
     if (!jobId) {
-      navigate("/settings/jobs");
+      navigate("/jobs");
       return;
     }
 
@@ -26,35 +26,56 @@ export default function JobProfile() {
     }
 
     async function loadData() {
-      try {
-        setError(null);
+        try {
+            setError(null);
 
-        /* 1️⃣ Buscar dados da vaga */
-        const jobRes = await fetch(`${BASE_URL}/jobs/${jobId}`);
-        const jobJson = await jobRes.json();
+            /* 1️⃣ Buscar dados da vaga */
+            const jobRes = await fetch(`${BASE_URL}/jobs/${jobId}`);
+            const jobJson = await jobRes.json();
 
-        setJob(jobJson.job);
+            setJob(jobJson.job);
 
-        /* 2️⃣ Buscar entrevistas da vaga */
-        const intRes = await fetch(
-          `${BASE_URL}/jobs/${jobId}/interviews?user_id=${userId}`
-        );
+            /* 2️⃣ Buscar entrevistas da vaga */
+            const intRes = await fetch(
+                `${BASE_URL}/jobs/${jobId}/interviews?user_id=${userId}`
+            );
 
-        const intJson = await intRes.json();
+            const intJson = await intRes.json();
 
-        if (!intRes.ok) {
-          throw new Error(intJson?.error || "Erro ao buscar entrevistas");
-        }
+            if (!intRes.ok) {
+                throw new Error(intJson?.error || "Erro ao buscar entrevistas");
+            }
 
-        setInterviews(intJson.interviews);
-      } catch (err) {
+            setInterviews(intJson.interviews);
+        } catch (err) {
         console.error(err);
         setError("Erro ao carregar perfil da vaga");
-      }
+        }
+
     }
 
     loadData();
-  }, [jobId, userId, navigate]);
+    }, [jobId, userId, navigate]);
+    
+    async function handleDelete(jobId) {
+        if (!jobId) {
+        console.error("ID da vaga indefinido");
+        return;
+        }
+
+        const confirmed = window.confirm(
+        "Tem certeza que deseja excluir esta vaga?"
+        );
+        if (!confirmed) return;
+
+        await fetch(`${BASE_URL}/jobs/${jobId}`, {
+        method: "DELETE"
+        });
+
+        setJob(prev =>
+            prev.filter(job => job.id !== jobId)
+        );
+    }
 
   return (
     <div className="layout" style={{ padding: 24 }}>
@@ -67,7 +88,7 @@ export default function JobProfile() {
                     {job ? job.name : "Carregando..."}
                 </h2>
             </div>
-        
+            
             <div style={{ width:"100%", paddingLeft: 20, color: "#ffffffff" }}>
                 {!job && !error && (
                     <p style={{ color: "var(--muted)" }}>Carregando descrição...</p>
@@ -95,6 +116,24 @@ export default function JobProfile() {
                 </> 
                 )}
             </div>
+
+            <div style={{ width:"100%", marginTop:40, paddingLeft: 20, color: "#ffffffff" }}>
+                <button
+                    onClick={() => handleDelete(job.id)}
+                    className="delete_button"
+                > Remover vaga
+                </button>
+
+                <button
+                    className="edit_button"
+                    onClick={() =>
+                    navigate(`/jobs/${job.id}`)
+                    }
+                >
+                    Editar vaga
+                </button>
+            </div>
+
         </div>
 
         {/* DIREITA – ENTREVISTAS */}

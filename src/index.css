@@ -24,14 +24,29 @@ h1, h2, h3 {
 }
 
 table td {
-  border-bottom: solid 1px #8b949e;
-  padding-top: 15px;
-  padding-bottom: 15px;
+  border-bottom: solid 1px #4e5053;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.line_title:hover {
+  background-color: var(--border);
+}
+
+.line_title{
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-weight: bold;
+  padding-left: 20px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border-radius: 6px;
 }
 
 button {
-  background-color: #eedff0;
-  border: solid 1px var(--accent);
+  background-color: #fff;
+  border: none;
   padding: 10px 14px;
   border-radius: 6px;
   color: #000;
@@ -40,8 +55,8 @@ button {
 }
 
 button:hover {
-  background-color: #fff;
-  border: solid 1px #383838;
+  background-color: #eedff0;
+  border: none;
 }
 
 button:disabled {
@@ -51,7 +66,7 @@ button:disabled {
 
 .interview_button {
   background-color: darkorchid;
-  border: solid 1px darkorchid;
+  border: none;
   padding: 10px 14px;
   border-radius: 6px;
   color: #fff;
@@ -61,7 +76,38 @@ button:disabled {
 
 .interview_button:hover {
   background-color: rgb(145, 77, 179);
-  border: solid 1px #fff;
+  border: none;
+}
+
+.delete_button {
+  background-color: rgb(216, 85, 85);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.delete_button:hover {
+  background-color: rgb(219, 95, 95);
+  border: none;
+}
+
+.edit_button {
+  background-color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.edit_button:hover {
+  background-color: #eedff0;
+  border: none;
 }
 
 
