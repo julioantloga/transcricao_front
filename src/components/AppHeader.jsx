@@ -52,7 +52,8 @@ export default function AppHeader() {
         <img
             src={logoMind}
             alt="Logo"
-            style={{ height: 32 }}
+            style={{ height: 32, cursor: "pointer" }}
+            onClick={() => navigate("/")}
         />
         <span style={{ fontWeight: 600 }}>{userName}</span>
         </div>
@@ -61,7 +62,7 @@ export default function AppHeader() {
         <div style={{ display: "flex", gap: 12 }}>
         {!isHome && (
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/")}
                 style={{
                 background: "#fff",
                 color: "#000",

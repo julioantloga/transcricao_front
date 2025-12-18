@@ -51,7 +51,7 @@ export default function Jobs() {
         </div>
 
         <div className="card">
-            <h2>Vagas cadastradas:</h2>
+            <h2>Suas vagas:</h2>
 
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>
@@ -61,7 +61,14 @@ export default function Jobs() {
                     {job.name}
                     </td>
 
-                    <td style={{ width: 140 }}>
+                    <td style={{ width: 230 }}>
+                         <button
+                            className="interview_button"
+                            onClick={() => navigate(`/job_profile?id=${job.id}`)}
+                            style={{ marginRight: 8 }}
+                            >
+                            Entrevistas
+                        </button>
                         <button
                             onClick={() =>
                             navigate(`/settings/jobs/${job.id}`)

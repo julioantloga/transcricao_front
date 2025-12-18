@@ -10,7 +10,7 @@ export default function ConfigMenu() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 120px)",
+        minHeight: "calc(60vh - 120px)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center"
@@ -19,7 +19,7 @@ export default function ConfigMenu() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 280px)",
+          gridTemplateColumns: "repeat(2, 300px)",
           gap: 24
         }}
       >
@@ -32,18 +32,6 @@ export default function ConfigMenu() {
           <h2>Tipos de Entrevista</h2>
           <p style={{ color: "var(--muted)" }}>
             Defina modelos de entrevista e competências avaliadas
-          </p>
-        </div>
-
-        {/* CARD: VAGAS */}
-        <div
-          className="card"
-          style={{ cursor: "pointer", textAlign: "center" }}
-          onClick={() => navigate("/settings/jobs")}
-        >
-          <h2>Vagas</h2>
-          <p style={{ color: "var(--muted)" }}>
-            Gerencie descrições e atividades das vagas
           </p>
         </div>
 

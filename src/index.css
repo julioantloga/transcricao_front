@@ -23,9 +23,15 @@ h1, h2, h3 {
   margin-top: 0;
 }
 
+table td {
+  border-bottom: solid 1px #8b949e;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
 button {
-  background-color: var(--accent);
-  border: none;
+  background-color: #eedff0;
+  border: solid 1px var(--accent);
   padding: 10px 14px;
   border-radius: 6px;
   color: #000;
@@ -33,10 +39,31 @@ button {
   cursor: pointer;
 }
 
+button:hover {
+  background-color: #fff;
+  border: solid 1px #383838;
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.interview_button {
+  background-color: darkorchid;
+  border: solid 1px darkorchid;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.interview_button:hover {
+  background-color: rgb(145, 77, 179);
+  border: solid 1px #fff;
+}
+
 
 input[type="radio"] {
   margin-right: 4px;
