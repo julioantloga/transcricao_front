@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import JobChat from "../components/JobChat";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -83,37 +84,15 @@ export default function JobProfile() {
         {/* HEADER (mesmo padrão da Home) */}
         <div className="card">
         
-            <div style={{ width:"100%", paddingLeft: 20, color: "#ffffffff" }}>
+            <div style={{ width:"100%",  color: "#ffffffff" }}>
                 <h2 style={{ paddingBottom: 16, borderBottom: "solid 1px var(--muted)" }}>
                     {job ? job.name : "Carregando..."}
                 </h2>
             </div>
             
-            <div style={{ width:"100%", paddingLeft: 20, color: "#ffffffff" }}>
-                {!job && !error && (
-                    <p style={{ color: "var(--muted)" }}>Carregando descrição...</p>
-                )}
+            <div style={{ width:"100%", color: "#ffffffff" }}>
                 {job && (
-                <>
-                <h3 style={{ marginTop: 18 }}>Descrição</h3>
-                <p style={{ whiteSpace: "pre-wrap" }}>
-                    {job.job_description || "Sem descrições definidas"}
-                </p>
-                </>
-                )}
-            </div>
-
-            <div style={{ width:"100%", paddingLeft: 20, color: "#ffffffff" }}>
-                {!job && !error && (
-                <p style={{ color: "var(--muted)" }}>Carregando atividades...</p>
-                )}
-                {job && (
-                <>
-                <h3 style={{ marginTop: 18 }}>Atividades</h3>
-                <p style={{ whiteSpace: "pre-wrap" }}>
-                {job.job_responsibilities || "Sem atividades definidas"}
-                </p>
-                </> 
+                    <JobChat jobId={jobId} />
                 )}
             </div>
 
@@ -151,39 +130,30 @@ export default function JobProfile() {
                 {interviews.map((i) => (
                     <li
                     key={i.id}
-                    style={{
-                        border: "1px solid var(--border)",
-                        borderRadius: 6,
-                        padding: 16,
-                        marginBottom: 12,
-                        background: "var(--bg-alt)",
-                        cursor: "pointer"
-                    }}
+                    className="interview_list"
                     onClick={() =>
                         navigate(`/interview_transcription?id=${i.id}`)
                     }
                     >
-                    <strong>{i.job_title}</strong>
+                        <p>
+                            <strong>{i.candidate_name || "Candidato não identificado"}</strong> - {i.job_title}
+                        </p>    
+                        {i.interview_type_name && (
 
-                    {i.interview_type_name && (
-                        <>
+                            <span style={{ fontSize: 13, color: "#8b949e" }}>
+                                Tipo de entrevista: {i.interview_type_name}
+                            </span>
+                        )}
                         <br />
-                        <span style={{ fontSize: 13, color: "#8b949e" }}>
-                            Tipo de análise: {i.interview_type_name}
+                        <span style={{ color: "var(--muted)", fontSize: 14 }}>
+                            Criada em:{" "}
+                            {new Date(i.created_at).toLocaleString("pt-BR")}
                         </span>
-                        </>
-                    )}
-
-                    <br />
-                    <span style={{ color: "var(--muted)", fontSize: 14 }}>
-                        Criada em:{" "}
-                        {new Date(i.created_at).toLocaleString("pt-BR")}
-                    </span>
                     </li>
                 ))}
                 </ul>
         </div>
-
+           
     </div>
 
   );

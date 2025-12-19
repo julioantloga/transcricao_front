@@ -31,7 +31,7 @@ export default function InterviewTranscription() {
   const [parecerEditando, setParecerEditando] = useState(false);
   const [parecerEditado, setParecerEditado] = useState("");
   const [feedbackDado, setFeedbackDado] = useState(null);
-
+  const [candidateName, setCandidateName] = useState("");
   const [interviewTypes, setInterviewTypes] = useState([]);
   const [interviewTypeId, setInterviewTypeId] = useState("none"); 
   const [jobTouched, setJobTouched] = useState(false);
@@ -95,6 +95,7 @@ export default function InterviewTranscription() {
           job_responsibilities: item.job_responsibilities || "",
           company_values: item.company_values || ""
         });
+        setCandidateName(item.candidate_name || "");
         setResultado({ text: item.transcript || "" });
         setMetrics(item.metrics || null);
 
@@ -363,7 +364,8 @@ export default function InterviewTranscription() {
           company_values: form.company_values,
           notes: form.notes,
           metrics: metrics || null,
-          audio_path: resultado?.audioPath || null
+          audio_path: resultado?.audioPath || null,
+          candidate_name: candidateName || null,
         })
       });
 
@@ -499,6 +501,17 @@ export default function InterviewTranscription() {
 
               <h2>1. Configurações da Vaga</h2>
 
+              <label style={{ display: "block", marginBottom: 6 }}>
+                  Nome do Candidato(a)
+              </label>
+              <div style={{ marginBottom: 16 }}>
+                <input
+                  className="input"
+                  value={candidateName}
+                  onChange={e => setCandidateName(e.target.value)}
+                  placeholder="Ex: João da Silva"
+                />
+              </div>
               <label style={{ display: "block", marginBottom: 6 }}>
                   Selecionar vaga
               </label>        

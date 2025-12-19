@@ -44,6 +44,22 @@ table td {
   border-radius: 6px;
 }
 
+.interview_list{
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 100%;
+  text-align: left;
+  font-weight: bold;
+  padding: 16px;
+  margin-bottom: 12px;
+  background-color: "var(--bg-alt)";
+}
+
+.interview_list:hover {
+  background-color: var(--border);
+}
+
 button {
   background-color: #fff;
   border: none;
@@ -109,7 +125,6 @@ button:disabled {
   background-color: #eedff0;
   border: none;
 }
-
 
 input[type="radio"] {
   margin-right: 4px;

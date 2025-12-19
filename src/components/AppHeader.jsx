@@ -5,7 +5,7 @@ import logoMind from "../assets/logo_mind.png";
 export default function AppHeader() {
     const navigate = useNavigate();
     const location = useLocation();
-
+    
     const isHome = location.pathname === "/";
     const userName = localStorage.getItem("userName");
 
