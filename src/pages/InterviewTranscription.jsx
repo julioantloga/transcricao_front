@@ -579,22 +579,6 @@ export default function InterviewTranscription() {
                 </div>
               ))}
 
-              {interviewTypeId === "none" && (
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6 }}>
-                    Valores da empresa
-                  </label>
-                  <textarea
-                    className="input"
-                    style={{ height: 150, width: "100%" }}
-                    value={form.company_values}
-                    onChange={(e) =>
-                      setForm({ ...form, company_values: e.target.value })
-                    }
-                  />
-                </div>
-              )}
-
             </div>
 
             <div className="card_session" >
@@ -650,6 +634,23 @@ export default function InterviewTranscription() {
                     ))}
                   </select>
                 </div>
+
+                {interviewTypeId === "none" && (
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: "block", marginBottom: 6 }}>
+                    Descreva os critérios de avaliação
+                  </label>
+                  <textarea
+                    className="input"
+                    style={{ height: 150, width: "100%" }}
+                    value={form.company_values}
+                    onChange={(e) =>
+                      setForm({ ...form, company_values: e.target.value })
+                    }
+                  />
+                </div>
+
+              )}
 
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ display: "block", marginBottom: 6 }}>Selecionar roteiro</label>
