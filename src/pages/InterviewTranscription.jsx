@@ -31,9 +31,9 @@ export default function InterviewTranscription() {
   const [parecerEditando, setParecerEditando] = useState(false);
   const [parecerEditado, setParecerEditado] = useState("");
   const [feedbackDado, setFeedbackDado] = useState(null);
-  const [candidateName, setCandidateName] = useState("");
   const [interviewTypes, setInterviewTypes] = useState([]);
-  const [interviewTypeId, setInterviewTypeId] = useState("none"); 
+  const [interviewTypeId, setInterviewTypeId] = useState("none");
+
   const [jobTouched, setJobTouched] = useState(false);
   const [scriptTouched, setScriptTouched] = useState(false);
 
@@ -58,6 +58,10 @@ export default function InterviewTranscription() {
   const [jobId, setJobId] = useState("none");
   const [interviewScriptId, setInterviewScriptId] = useState("none");
 
+  const [candidates, setCandidates] = useState([]);
+  const [candidateId, setCandidateId] = useState("none");
+  const [candidateName, setCandidateName] = useState("");
+
 
 
   // ---------------------------------------------------------------------------
@@ -67,6 +71,11 @@ export default function InterviewTranscription() {
     
     const userId = localStorage.getItem("userId");
     if (!userId) return;
+
+    fetch(`${BASE_URL}/candidates?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => setCandidates(data.candidates || []))
+      .catch(err => console.error("Erro ao carregar candidatos", err));
 
     fetch(`${BASE_URL}/interview_types?user_id=${userId}`)
       .then(res => res.json())
@@ -95,7 +104,7 @@ export default function InterviewTranscription() {
           job_responsibilities: item.job_responsibilities || "",
           company_values: item.company_values || ""
         });
-        setCandidateName(item.candidate_name || "");
+        
         setResultado({ text: item.transcript || "" });
         setMetrics(item.metrics || null);
 
@@ -111,6 +120,9 @@ export default function InterviewTranscription() {
         setJobId(item.job_id ?? "none");
         setInterviewScriptId(item.interview_script_id ?? "none");
 
+        setCandidateId(item.candidate_id ?? "none");
+        setCandidateName(item.candidate_name || "");
+
         if (item.audio_path) {
           const audioLink = `${BASE_URL}/uploads/${item.audio_path}`;
           setAudioUrl(audioLink);
@@ -122,6 +134,17 @@ export default function InterviewTranscription() {
         setErro("Vaga não encontrada");
       });
   }, [id]);
+
+
+  function handleCandidateChange(value) {
+    setCandidateId(value);
+
+    const selected = candidates.find(c => c.id === Number(value));
+    if (!selected) return;
+
+    setCandidateName(selected.name);
+  }
+
 
   // ---------------------------------------------------------------------------
   // Função utilitária para exibir tempos
@@ -365,6 +388,7 @@ export default function InterviewTranscription() {
           notes: form.notes,
           metrics: metrics || null,
           audio_path: resultado?.audioPath || null,
+          candidate_id: candidateId === "none" ? null : Number(candidateId),
           candidate_name: candidateName || null,
         })
       });
@@ -502,14 +526,27 @@ export default function InterviewTranscription() {
               <h2>1. Configurações da Vaga</h2>
 
               <label style={{ display: "block", marginBottom: 6 }}>
-                  Nome do Candidato(a)
+                  Candidato(a)
               </label>
               <div style={{ marginBottom: 16 }}>
-                <input
+                <select
                   className="input"
+                  value={candidateId}
+                  onChange={(e) => handleCandidateChange(e.target.value)}
+                >
+                  <option value="none">Selecione um candidato</option>
+
+                  {candidates.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                {/* Campo oculto: mantém compatibilidade com o backend */}
+                <input
+                  type="hidden"
+                  name="candidate_name"
                   value={candidateName}
-                  onChange={e => setCandidateName(e.target.value)}
-                  placeholder="Ex: João da Silva"
                 />
               </div>
               <label style={{ display: "block", marginBottom: 6 }}>
@@ -609,7 +646,7 @@ export default function InterviewTranscription() {
                {/* Tipo de Entrevista */}
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ display: "block", marginBottom: 6 }}>
-                    Selecionar entrevista
+                    Selecionar uma entrevista
                   </label>
 
                   <select
@@ -629,7 +666,7 @@ export default function InterviewTranscription() {
 
                     {interviewTypes.map(type => (
                       <option key={type.id} value={type.id}>
-                        {type.name}
+                        [{type.category}] {type.name}
                       </option>
                     ))}
                   </select>

@@ -13,6 +13,8 @@ import InterviewScripts from "./pages/InterviewScripts.jsx";
 import EditInterviewScript from "./pages/EditInterviewScript.jsx";
 import ConfigMenu from "./pages/ConfigMenu.jsx";
 import JobProfile from "./pages/JobProfile.jsx";
+import Candidates from "./pages/Candidates.jsx";
+import EditCandidate from "./pages/EditCandidate.jsx";
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/settings/interview_scripts" element={<ProtectedRoute><WithHeader><InterviewScripts /></WithHeader></ProtectedRoute>} />
         <Route path="/settings/interview_scripts/:id" element={<ProtectedRoute><WithHeader><EditInterviewScript /></WithHeader></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><WithHeader><ConfigMenu /></WithHeader></ProtectedRoute>} />    
+        <Route path="/candidates" element={<ProtectedRoute><WithHeader><Candidates /></WithHeader></ProtectedRoute>}/>
+        <Route path="/candidates/:id" element={<ProtectedRoute><WithHeader><EditCandidate /></WithHeader></ProtectedRoute>} />
       </Routes>
 
     </BrowserRouter>

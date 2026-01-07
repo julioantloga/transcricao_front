@@ -141,12 +141,11 @@ export default function JobProfile() {
                         {i.interview_type_name && (
 
                             <span style={{ fontSize: 13, color: "#8b949e" }}>
-                                Tipo de entrevista: {i.interview_type_name}
+                                 [{i.interview_type_category.toUpperCase()}] {i.interview_type_name}
                             </span>
                         )}
                         <br />
-                        <span style={{ color: "var(--muted)", fontSize: 14 }}>
-                            Criada em:{" "}
+                        <span style={{ color: "var(--muted)", fontSize: 12 }}>
                             {new Date(i.created_at).toLocaleString("pt-BR")}
                         </span>
                     </li>

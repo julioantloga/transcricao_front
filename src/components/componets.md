@@ -1,4 +1,120 @@
-/* AudioRecorder.jsx */
+# AppHeader.jsx
+import { useNavigate, useLocation } from "react-router-dom";
+import { createInterview } from "../services/api";
+import logoMind from "../assets/logo_mind.png";
+
+export default function AppHeader() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    const isHome = location.pathname === "/";
+    const userName = localStorage.getItem("userName");
+
+    function handleLogout() {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    navigate("/login");
+    }
+
+    async function handleNewInterview() {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+            navigate("/login");
+            return;
+        }
+
+        try {
+            const { id } = await createInterview(userId);
+            navigate(`/interview_transcription?id=${id}`);
+        } catch (err) {
+            alert(err.message);
+            console.error("Erro ao criar entrevista:", err);
+        }
+        }
+
+    return (
+    <header
+        style={{
+        position: "fixed",
+        top: 0,
+        width: "100%",
+        background: "#161b22",
+        padding: "16px 24px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: "1px solid var(--border)",
+        zIndex: 1000,
+        }}
+    >
+        {/* LOGO + USER */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <img
+            src={logoMind}
+            alt="Logo"
+            style={{ height: 32, cursor: "pointer" }}
+            onClick={() => navigate("/")}
+        />
+        <span style={{ fontWeight: 600 }}>{userName}</span>
+        </div>
+
+        {/* BOTÕES */}
+        <div style={{ display: "flex", gap: 12 }}>
+        {!isHome && (
+            <button
+                onClick={() => navigate("/")}
+                style={{
+                background: "#fff",
+                color: "#000",
+                padding: "8px 12px",
+                border: "1px solid #ccc",
+                borderRadius: 6,
+                cursor: "pointer"
+                }}
+            >
+                ← Voltar
+            </button>
+            )}
+            
+        <button 
+            onClick={() => navigate("/candidates/new")}>
+            + Novo Candidato
+        </button>
+
+        <button
+            onClick={handleNewInterview}
+        >
+            + Nova Entrevista
+        </button>
+
+        <button
+            onClick={() => navigate("/settings")}
+            >
+            Configurações
+        </button>
+
+        <button
+            onClick={handleLogout}
+            style={{
+            background: "#f85149",
+            color: "#fff",
+            border: "none",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer"
+            }}
+        >
+            Sair
+        </button>
+        </div>
+    </header>
+    );
+    }
+
+
+
+# AudioRecorder.jsx
 import { useState, useRef } from "react";
 
 export default function AudioRecorder({ onFinish }) {
@@ -308,4 +424,160 @@ export default function AudioRecorder({ onFinish }) {
       )}
     </div>
   );
+}
+
+# JobChat.jsx
+import { useState } from "react";
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+/*
+Objetivo:
+Chat analítico baseado nas entrevistas da vaga (RAG via backend).
+- Histórico apenas no frontend
+- Cada pergunta é independente
+*/
+
+export default function JobChat({ jobId }) {
+  const userId = localStorage.getItem("userId");
+
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Olá! O que você quer saber sobre as entrevistas dessa vaga?"
+    }
+  ]);
+
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function sendQuestion() {
+    if (!input.trim() || loading) return;
+
+    const question = input.trim();
+
+    setMessages(prev => [
+      ...prev,
+      { role: "user", content: question }
+    ]);
+
+    setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${BASE_URL}/jobs/${jobId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          question
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao consultar o chat");
+      }
+
+      const data = await res.json();
+
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: data.answer }
+      ]);
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao obter resposta do assistente.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendQuestion();
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 24 }}>
+      <h3>Assistente da Vaga</h3>
+
+      {/* HISTÓRICO */}
+      <div
+        style={{
+          border: "1px solid var(--border)",
+          borderRadius: 6,
+          padding: 12,
+          height: 280,
+          overflowY: "auto",
+          marginBottom: 12,
+          background: "#0d1117"
+        }}
+      >
+        {messages.map((m, idx) => (
+          <div
+            key={idx}
+            style={{
+              marginBottom: 12,
+              whiteSpace: "pre-wrap",
+              color: m.role === "assistant" ? "#c9d1d9" : "#ffffff"
+            }}
+          >
+            <span style={{fontSize:14, color:"#862a86ff"}}><strong>
+              {m.role === "assistant" ? "Assistente" : "Você"}:
+            </strong></span>
+            <div>{m.content}</div>
+          </div>
+        ))}
+
+        {loading && (
+          <p style={{ color: "var(--muted)" }}>
+            Analisando...
+          </p>
+        )}
+      </div>
+
+      {/* INPUT */}
+      <textarea
+        className="input_text"
+        placeholder="Digite sua pergunta..."
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        rows={3}
+        disabled={loading}
+      />
+
+      {error && (
+        <p style={{ color: "red", marginTop: 8 }}>
+          {error}
+        </p>
+      )}
+
+      <button
+        onClick={sendQuestion}
+        disabled={loading || !input.trim()}
+        style={{ marginTop: 8 }}
+      >
+        Enviar
+      </button>
+    </div>
+  );
+}
+
+# ProtectionRoute.jsx
+import { Navigate } from "react-router-dom";
+
+export default function ProtectedRoute({ children }) {
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 }

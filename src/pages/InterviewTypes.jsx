@@ -46,7 +46,10 @@ export default function InterviewTypes() {
             <tbody>
             {types.map((t) => (
                 <tr key={t.id}>
-                  <td style={{ padding: "8px 0" }}>{t.name}</td>
+                  <td style={{ padding: "8px 0" }}>
+                    <strong>[{t.category.toUpperCase()}]</strong> {t.name}
+                  </td>
+
                   <td style={{ width: 120 }}>
                     <button onClick={() => navigate(`/settings/interview_types/${t.id}`)}>
                       Editar
@@ -55,7 +58,7 @@ export default function InterviewTypes() {
                     <button
                       onClick={() => handleDelete(t.id)}
                       style={{ marginLeft: 8, background: "#f85149", color: "#fff" }}
-                    >X
+                    >x
                     </button>
                   </td>
                 </tr>

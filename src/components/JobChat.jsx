@@ -1,39 +1,72 @@
-import { useState } from "react";
+// JobChat.jsx
+import { useEffect, useState } from "react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 /*
 Objetivo:
 Chat analítico baseado nas entrevistas da vaga (RAG via backend).
-- Histórico apenas no frontend
-- Cada pergunta é independente
+- ✅ Carrega histórico do backend ao abrir/recarregar
+- ✅ Continua enviando perguntas via POST
 */
-
 export default function JobChat({ jobId }) {
   const userId = localStorage.getItem("userId");
 
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Olá! O que você quer saber sobre as entrevistas dessa vaga?"
-    }
-  ]);
+  const defaultWelcome = {
+    role: "assistant",
+    content: "Olá! O que você quer saber sobre as entrevistas dessa vaga?"
+  };
 
+  const [messages, setMessages] = useState([defaultWelcome]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState(null);
+  const [conversation_id, setUser] = useState(32);
+
+  // ✅ Carrega histórico ao montar (e quando jobId mudar)
+  useEffect(() => {
+    async function loadHistory() {
+      if (!jobId || !userId) return;
+
+      setLoadingHistory(true);
+      setError(null);
+
+      try {
+        const res = await fetch(
+          `${BASE_URL}/jobs/${jobId}/chat/messages?user_id=${userId}&limit=50`
+        );
+
+        if (!res.ok) throw new Error("Erro ao carregar histórico do chat");
+
+        const data = await res.json();
+        const serverMessages = Array.isArray(data.messages) ? data.messages : [];
+
+        if (serverMessages.length === 0) {
+          setMessages([defaultWelcome]);
+        } else {
+          // serverMessages já vem em ordem ASC
+          setMessages(serverMessages.map(m => ({ role: m.role, content: m.content })));
+        }
+      } catch (err) {
+        console.error(err);
+        setMessages([defaultWelcome]);
+        setError("Erro ao carregar histórico do chat.");
+      } finally {
+        setLoadingHistory(false);
+      }
+    }
+
+    loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   async function sendQuestion() {
     if (!input.trim() || loading) return;
 
     const question = input.trim();
 
-    setMessages(prev => [
-      ...prev,
-      { role: "user", content: question }
-    ]);
-
+    setMessages(prev => [...prev, { role: "user", content: question }]);
     setInput("");
     setLoading(true);
     setError(null);
@@ -89,6 +122,10 @@ export default function JobChat({ jobId }) {
           background: "#0d1117"
         }}
       >
+        {loadingHistory && (
+          <p style={{ color: "var(--muted)" }}>Carregando histórico…</p>
+        )}
+
         {messages.map((m, idx) => (
           <div
             key={idx}
@@ -98,16 +135,16 @@ export default function JobChat({ jobId }) {
               color: m.role === "assistant" ? "#c9d1d9" : "#ffffff"
             }}
           >
-            <span style={{fontSize:14, color:"#862a86ff"}}><strong>
-              {m.role === "assistant" ? "Assistente" : "Você"}:
-            </strong></span>
+            <span style={{ fontSize: 14, color: "#862a86ff" }}>
+              <strong>{m.role === "assistant" ? "Assistente" : "Você"}:</strong>
+            </span>
             <div>{m.content}</div>
           </div>
         ))}
 
         {loading && (
           <p style={{ color: "var(--muted)" }}>
-            Analisando...
+            Analisando…
           </p>
         )}
       </div>
@@ -115,7 +152,7 @@ export default function JobChat({ jobId }) {
       {/* INPUT */}
       <textarea
         className="input_text"
-        placeholder="Digite sua pergunta..."
+        placeholder="Digite sua pergunta."
         value={input}
         onChange={e => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -132,7 +169,7 @@ export default function JobChat({ jobId }) {
       <button
         onClick={sendQuestion}
         disabled={loading || !input.trim()}
-        style={{ marginTop: 8 }}
+        style={{ marginTop: 12 }}
       >
         Enviar
       </button>

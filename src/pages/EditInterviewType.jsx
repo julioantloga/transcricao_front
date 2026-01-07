@@ -10,6 +10,7 @@ export default function EditInterviewType() {
 
   const [name, setName] = useState("");
   const [competencies, setCompetencies] = useState([]);
+  const [category, setCategory] = useState("cultura");
 
   useEffect(() => {
     if (!isNew) {
@@ -17,6 +18,7 @@ export default function EditInterviewType() {
         .then((res) => res.json())
         .then((data) => {
           setName(data.type.name);
+          setCategory(data.type.category || "cultura");
           setCompetencies(data.competencies);
         });
     }
@@ -36,17 +38,19 @@ export default function EditInterviewType() {
     let typeId = id;
     if (isNew) {
       const res = await fetch(`${BASE_URL}/interview_types`, {
+        
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, name })
+        body: JSON.stringify({ user_id: userId, name, category })
       });
       const data = await res.json();
       typeId = data.type.id;
     } else {
+      console.log(category);  
       await fetch(`${BASE_URL}/interview_types/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, category })
       });
     }
 
@@ -90,115 +94,128 @@ export default function EditInterviewType() {
             />
         </div>
 
-        <h3 style={{ width: "100%", marginTop: 32 }}>Competências</h3>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
-            <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Descrição</th>
-                <th>Insuficiente</th>
-                <th>Abaixo do Esperado</th>
-                <th>Dentro das Expectativas</th>
-                <th>Excepcional</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            {competencies.map((comp, index) => (
-                <tr key={index}>
-                <td><textarea
-                    type="text"
-                    value={comp.name}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].name = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td><textarea
-                    type="text"
-                    value={comp.description}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].description = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td><textarea
-                    type="text"
-                    value={comp.insuficiente}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].insuficiente = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td><textarea
-                    type="text"
-                    value={comp.abaixo_do_esperado}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].abaixo_do_esperado = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td><textarea
-                    type="text"
-                    value={comp.dentro_expectativas}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].dentro_expectativas = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td><textarea
-                    type="text"
-                    value={comp.excepcional}
-                    onChange={(e) => {
-                    const arr = [...competencies];
-                    arr[index].excepcional = e.target.value;
-                    setCompetencies(arr);
-                    }}
-                    className="input_text"
-                /></td>
-
-                <td>
-                    <button
-                    onClick={() => {
-                        const arr = [...competencies];
-                        arr.splice(index, 1);
-                        setCompetencies(arr);
-                    }}
-                    >
-                    ✖
-                    </button>
-                </td>
-                </tr>
-            ))}
-            </tbody>
-        </table>
-
-        {/* ✅ Mostrar aviso se não houver competências */}
-        {competencies.length === 0 && (
-        <div className="card" style={{ color: "var(--muted)", marginBottom: 32 }}>
-            Nenhuma competência adicionada.
+        <div> 
+          <h3 style={{ marginTop: 24 }}>Categoria</h3>
+          <select
+            className="input"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+          >
+            <option value="cultura">Cultura</option>
+            <option value="tecnica">Técnica</option>
+            <option value="gestor_lider">Gestor / Liderança</option>
+          </select>
         </div>
-        )}    
+        <div>
+          <h3 style={{ width: "100%", marginTop: 32 }}>Competências</h3>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+              <thead>
+              <tr>
+                  <th>Nome</th>
+                  <th>Descrição</th>
+                  <th>Insuficiente</th>
+                  <th>Abaixo do Esperado</th>
+                  <th>Dentro das Expectativas</th>
+                  <th>Excepcional</th>
+                  <th></th>
+              </tr>
+              </thead>
+              <tbody>
+              {competencies.map((comp, index) => (
+                  <tr key={index}>
+                  <td><textarea
+                      type="text"
+                      value={comp.name}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].name = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
 
-        <button onClick={handleAddCompetency}>
-            + Adicionar Competência
-        </button>
+                  <td><textarea
+                      type="text"
+                      value={comp.description}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].description = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
 
+                  <td><textarea
+                      type="text"
+                      value={comp.insuficiente}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].insuficiente = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
+
+                  <td><textarea
+                      type="text"
+                      value={comp.abaixo_do_esperado}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].abaixo_do_esperado = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
+
+                  <td><textarea
+                      type="text"
+                      value={comp.dentro_expectativas}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].dentro_expectativas = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
+
+                  <td><textarea
+                      type="text"
+                      value={comp.excepcional}
+                      onChange={(e) => {
+                      const arr = [...competencies];
+                      arr[index].excepcional = e.target.value;
+                      setCompetencies(arr);
+                      }}
+                      className="input_text"
+                  /></td>
+
+                  <td>
+                      <button
+                      onClick={() => {
+                          const arr = [...competencies];
+                          arr.splice(index, 1);
+                          setCompetencies(arr);
+                      }}
+                      >
+                      ✖
+                      </button>
+                  </td>
+                  </tr>
+              ))}
+              </tbody>
+          </table>
+
+          {/* ✅ Mostrar aviso se não houver competências */}
+          {competencies.length === 0 && (
+          <div className="card" style={{ color: "var(--muted)", marginBottom: 32 }}>
+              Nenhuma competência adicionada.
+          </div>
+          )}    
+
+          <button onClick={handleAddCompetency}>
+              + Adicionar Competência
+          </button>
+        </div>
       </div>      
 
 
