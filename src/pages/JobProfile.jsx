@@ -31,7 +31,10 @@ export default function JobProfile() {
             setError(null);
 
             /* 1️⃣ Buscar dados da vaga */
-            const jobRes = await fetch(`${BASE_URL}/jobs/${jobId}`);
+            const jobRes = await fetch(
+                `${BASE_URL}/jobs/${jobId}?user_id=${userId}`
+                );
+
             const jobJson = await jobRes.json();
 
             setJob(jobJson.job);
