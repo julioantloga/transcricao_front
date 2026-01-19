@@ -15,8 +15,10 @@ export default function EditInterviewScript() {
   const [script, setScript] = useState("");
 
   useEffect(() => {
-    if (!isNew) {
-      fetch(`${BASE_URL}/interview_scripts/${id}`)
+    const userId = localStorage.getItem("userId");
+
+    if (!isNew && userId) {
+      fetch(`${BASE_URL}/interview_scripts/${id}?user_id=${userId}`)
         .then(res => res.json())
         .then(data => {
           setName(data.script.name || "");
