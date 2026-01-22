@@ -11,6 +11,7 @@ export default function InterviewTranscription() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const id = searchParams.get("id");
+  const isNewInterview = !id;
 
   useEffect(() => {
     if (!id) {
@@ -56,85 +57,107 @@ export default function InterviewTranscription() {
   const [scripts, setScripts] = useState([]);
 
   const [jobId, setJobId] = useState("none");
-  const [interviewScriptId, setInterviewScriptId] = useState("none");
 
   const [candidates, setCandidates] = useState([]);
   const [candidateId, setCandidateId] = useState("none");
   const [candidateName, setCandidateName] = useState("");
 
-
-
   // ---------------------------------------------------------------------------
   // Carrega dados caso tenha ID na URL
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    
     const userId = localStorage.getItem("userId");
     if (!userId) return;
-
+    
+    /* ================================
+      1️⃣ CANDIDATOS (independente)
+      ================================ */
     fetch(`${BASE_URL}/candidates?user_id=${userId}`)
       .then(res => res.json())
       .then(data => setCandidates(data.candidates || []))
       .catch(err => console.error("Erro ao carregar candidatos", err));
 
-    fetch(`${BASE_URL}/interview_types?user_id=${userId}`)
-      .then(res => res.json())
-      .then(data => setInterviewTypes(data.types || []));
-
+    /* ================================
+      2️⃣ VAGAS (independente)
+      ================================ */
     fetch(`${BASE_URL}/jobs?user_id=${userId}`)
       .then(res => res.json())
-      .then(data => setJobs(data.jobs || []));
+      .then(data => setJobs(data.jobs || []))
+      .catch(err => console.error("Erro ao carregar vagas", err));
 
-    fetch(`${BASE_URL}/interview_scripts?user_id=${userId}`)
-      .then(res => res.json())
-      .then(data => setScripts(data.scripts || []));
-  
-    fetch(`${BASE_URL}/interviews/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Vaga não encontrada");
-        return res.json();
-      })
-      .then((data) => {
-        const item = data.interview;
-        setForm({
-          job_title: item.job_title || "",
-          job_description: item.job_description || "",
-          notes: item.recruiter_notes || "",
-          interview_roadmap: item.interview_roadmap || "",
-          job_responsibilities: item.job_responsibilities || "",
-          company_values: item.company_values || ""
+    /* ================================
+      3️⃣ ENTREVISTA (depende de id)
+      ================================ */
+    if (id) {
+      fetch(`${BASE_URL}/interviews/${id}?user_id=${userId}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Entrevista não encontrada");
+          return res.json();
+        })
+        .then(data => {
+          if (!data?.interview) {
+            throw new Error("Entrevista inválida ou não encontrada");
+          }
+
+          const item = data.interview;
+
+          setForm({
+            job_title: item.job_title || "",
+            job_description: item.job_description || "",
+            notes: item.recruiter_notes || "",
+            interview_roadmap: item.interview_roadmap || "",
+            job_responsibilities: item.job_responsibilities || "",
+            company_values: item.company_values || ""
+          });
+
+          setResultado({ text: item.transcript || "" });
+          setMetrics(item.metrics || null);
+
+          const parecerFinal = item.manual_review?.trim()
+            ? item.manual_review
+            : item.final_review;
+
+          setParecer(parecerFinal || null);
+          setParecerEditado(parecerFinal || "");
+          setFeedbackDado(item.review_feedback || null);
+          
+          if (!isNewInterview) {
+            setInterviewTypeId(item.interview_type_id ?? "none");
+            setJobId(item.job_id ?? "none");
+            setCandidateId(item.candidate_id ?? "none");
+            setCandidateName(item.candidate_name || "");
+          }
+
+          if (item.audio_path) {
+            setAudioUrl(`${BASE_URL}/uploads/${item.audio_path}`);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          setErro("Vaga não encontrada");
         });
-        
-        setResultado({ text: item.transcript || "" });
-        setMetrics(item.metrics || null);
+    }
 
-        const parecerFinal = item.manual_review?.trim()
-          ? item.manual_review
-          : item.final_review;
-
-        setParecer(parecerFinal || null);
-        setParecerEditado(parecerFinal || "");
-        setFeedbackDado(item.review_feedback || null);
-
-        setInterviewTypeId(item.interview_type_id ?? "none");
-        setJobId(item.job_id ?? "none");
-        setInterviewScriptId(item.interview_script_id ?? "none");
-
-        setCandidateId(item.candidate_id ?? "none");
-        setCandidateName(item.candidate_name || "");
-
-        if (item.audio_path) {
-          const audioLink = `${BASE_URL}/uploads/${item.audio_path}`;
-          setAudioUrl(audioLink);
-        }
-
+    /* ================================
+    4️⃣ TIPOS DA VAGA (depende de jobId)
+    ================================ */
+  if (jobId && jobId !== "none") {
+    fetch(`${BASE_URL}/jobs/${jobId}/interview_types?user_id=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        setInterviewTypes(data.types || []);
       })
-      .catch((err) => {
-        console.error(err);
-        setErro("Vaga não encontrada");
+      .catch(err => {
+        console.error("Erro ao carregar tipos da vaga", err);
+        setInterviewTypes([]);
       });
-  }, [id]);
-
+  } else {
+    // só limpa quando NÃO há vaga
+    setInterviewTypes([]);
+    setInterviewTypeId("none");
+  }
+  
+  }, [id, jobId]);
 
   function handleCandidateChange(value) {
     setCandidateId(value);
@@ -144,7 +167,6 @@ export default function InterviewTranscription() {
 
     setCandidateName(selected.name);
   }
-
 
   // ---------------------------------------------------------------------------
   // Função utilitária para exibir tempos
@@ -157,9 +179,7 @@ export default function InterviewTranscription() {
       : "-";
   }
 
-  // ---------------------------------------------------------------------------
   // Enviar feedback
-  // ---------------------------------------------------------------------------
   async function enviarFeedback(tipo) {
     try {
       await fetch(`${BASE_URL}/interviews/${id}/review_feedback`, {
@@ -176,23 +196,11 @@ export default function InterviewTranscription() {
   }
 
   function handleJobChange(value) {
-    setJobTouched(true);
     setJobId(value);
 
-    if (value === "none") return;
-
-    const selectedJob = jobs.find(
-      j => j.id === Number(value)
-    );
-
-    if (!selectedJob) return;
-
-    setForm(prev => ({
-      ...prev,
-      job_title: selectedJob.name || "",
-      job_description: selectedJob.job_description || "",
-      job_responsibilities: selectedJob.job_responsibilities || ""
-    }));
+    // reset APENAS do que depende da vaga
+    setInterviewTypeId("none");
+    setInterviewTypes([]);
   }
 
   function handleScriptChange(value) {
@@ -222,9 +230,7 @@ export default function InterviewTranscription() {
     }));
   }
 
-  // ---------------------------------------------------------------------------
   // Processa gravação de áudio e transcrição
-  // ---------------------------------------------------------------------------
   async function handleTranscribe() {
     if (!audioFile) return;
 
@@ -345,9 +351,7 @@ export default function InterviewTranscription() {
     }
   }
 
-  // ---------------------------------------------------------------------------
   // Upload de arquivo WAV
-  // ---------------------------------------------------------------------------
   async function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -360,9 +364,7 @@ export default function InterviewTranscription() {
     await handleFinish({ file });
   }
 
-  // ---------------------------------------------------------------------------
   // Submeter parecer (CHAMA /review)
-  // ---------------------------------------------------------------------------
   async function handleSubmitParecer(e) {
     e.preventDefault();
     setLoadingParecer(true);
@@ -407,6 +409,28 @@ export default function InterviewTranscription() {
     }
 
   }
+
+function handleInterviewTypeChange(value) {
+  setInterviewTypeId(value);
+
+  if (value === "none") {
+    return;
+  }
+
+  const selectedType = interviewTypes.find(
+    t => String(t.id) === String(value)
+  );
+
+  if (!selectedType) return;
+
+  setForm(prev => ({
+    ...prev,
+    interview_roadmap: selectedType.interview_script || "",
+    company_values: "" // regra existente mantida
+  }));
+}
+
+
 
   // ---------------------------------------------------------------------------
   // LAYOUT
@@ -523,10 +547,10 @@ export default function InterviewTranscription() {
 
             <div className="card_session">
 
-              <h2>1. Configurações da Vaga</h2>
-
+              <h2>Configurações</h2>
+              {/* Candidato */}
               <label style={{ display: "block", marginBottom: 6 }}>
-                  Candidato(a)
+                  Candidato(a):
               </label>
               <div style={{ marginBottom: 16 }}>
                 <select
@@ -549,8 +573,9 @@ export default function InterviewTranscription() {
                   value={candidateName}
                 />
               </div>
+              {/* Vaga */}
               <label style={{ display: "block", marginBottom: 6 }}>
-                  Selecionar vaga
+                  Vaga:
               </label>        
               <div style={{ marginBottom: 16 }}>
                 <select
@@ -562,6 +587,30 @@ export default function InterviewTranscription() {
                   {jobs.map(j => (
                     <option key={j.id} value={j.id}>
                       {j.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Tipo de Entrevista */}
+              <label style={{ display: "block", marginBottom: 6 }}>
+                Etapa:
+              </label>
+              <div style={{ marginBottom: 16 }}>  
+                <select
+                  className="input"
+                  value={interviewTypeId}
+                  disabled={!jobId || jobId === "none"}
+                  onChange={(e) => handleInterviewTypeChange(e.target.value)}
+                >
+                  <option value="none">
+                    {!jobId || jobId === "none"
+                      ? "Selecione uma vaga primeiro"
+                      : "Selecione um tipo de entrevista"}
+                  </option>
+
+                  {interviewTypes.map(type => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
                     </option>
                   ))}
                 </select>
@@ -586,46 +635,12 @@ export default function InterviewTranscription() {
                   }}
                 />
               </div>
-
-              {/* Campos complementares */}
-              {[
-                { label: "Descrição da Vaga", key: "job_description" },
-                { label: "Atividades da Vaga", key: "job_responsibilities" }
-              ].map(({ label, key }) => (
-                <div key={key} style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6 }}>
-                    {label}
-                  </label>
-                  <textarea
-                    required
-                    value={form[key]}
-                    onChange={(e) =>
-                      setForm({ ...form, [key]: e.target.value })
-                    }
-                    style={{
-                      width: "100%",
-                      height: 150,
-                      resize: "vertical",
-                      padding: 8,
-                      background: "var(--bg)",
-                      color: "var(--text)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 6
-                    }}
-                  />
-                </div>
-              ))}
-
             </div>
 
             <div className="card_session" >
-              
-              <h2>2. Configurações da Entrevista</h2>
-              {/* Transcrição de áudio */}
-              
               <div style={{ marginBottom: 32 }}>
                 <label style={{ display: "block", marginBottom: 6 }}>
-                  Transcrição
+                  Transcrição da Entrevista:
                 </label>
                 <textarea
                   value={resultado?.text || ""}
@@ -643,34 +658,40 @@ export default function InterviewTranscription() {
                   }}
                 />
 
-               {/* Tipo de Entrevista */}
-                <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6 }}>
-                    Selecionar uma entrevista
-                  </label>
-
-                  <select
-                    className="input"
-                    value={interviewTypeId}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setInterviewTypeId(value);
-
-                      // regra: se não for "none", company_values vira null
-                      if (value !== "none") {
-                        setForm(prev => ({ ...prev, company_values: "" }));
+                {/* Campos complementares */}
+                {[
+                  { label: "Descrição da Vaga", key: "job_description" },
+                  { label: "Atividades da Vaga", key: "job_responsibilities" }
+                ].map(({ label, key }) => (
+                  <div key={key} style={{ marginBottom: 16 }}>
+                    <label style={{ display: "block", marginBottom: 6 }}>
+                      {label}
+                    </label>
+                    <textarea
+                      required
+                      value={form[key]}
+                      onChange={(e) =>
+                        setForm({ ...form, [key]: e.target.value })
                       }
-                    }}
-                  >
-                    <option value="none">Nenhum</option>
+                      style={{
+                        width: "100%",
+                        height: 150,
+                        resize: "vertical",
+                        padding: 8,
+                        background: "var(--bg)",
+                        color: "var(--text)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 6
+                      }}
+                    />
+                  </div>
+                ))}
 
-                    {interviewTypes.map(type => (
-                      <option key={type.id} value={type.id}>
-                        [{type.category}] {type.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Transcrição de áudio */}
+              
+              
+
+              
 
                 {interviewTypeId === "none" && (
                 <div style={{ marginBottom: 16 }}>
@@ -690,19 +711,7 @@ export default function InterviewTranscription() {
               )}
 
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ display: "block", marginBottom: 6 }}>Selecionar roteiro</label>
-                  <select
-                    className="input"
-                    value={interviewScriptId}
-                    onChange={e => handleScriptChange(e.target.value)}
-                  >
-                    <option value="none">Personaizado</option>
-                    {scripts.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label style={{ display: "block", marginBottom: 6 }}>Roteiro da entrevista</label>
                   <textarea
                       className="input_text"
                       style={{ height: 150, width: "100%", marginTop: 8}}
