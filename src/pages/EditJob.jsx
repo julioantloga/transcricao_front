@@ -23,7 +23,7 @@ export default function EditJob() {
   const [createNewType, setCreateNewType] = useState(false);
   const [newInterviewType, setNewInterviewType] = useState({
     name: "",
-    category: "",
+    category: "cultura",
     competencies: []
   });
 

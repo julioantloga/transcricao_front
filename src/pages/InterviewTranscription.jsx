@@ -14,12 +14,11 @@ export default function InterviewTranscription() {
   const isNewInterview = !id;
 
   useEffect(() => {
-    if (!id) {
-      alert("Nenhuma entrevista selecionada. Crie uma nova entrevista para continuar.");
-      navigate("/");
-    }
-  }, [id, navigate]);
-
+  if (!id) {
+    alert("Nenhuma entrevista selecionada. Crie uma nova entrevista para continuar.");
+    navigate("/");
+  }
+}, [id, navigate]);
 
   const [resultado, setResultado] = useState(null);
   const [metrics, setMetrics] = useState(null);
@@ -68,96 +67,133 @@ export default function InterviewTranscription() {
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId) return;
-    
-    /* ================================
-      1️⃣ CANDIDATOS (independente)
-      ================================ */
+
+    // Candidatos
     fetch(`${BASE_URL}/candidates?user_id=${userId}`)
       .then(res => res.json())
       .then(data => setCandidates(data.candidates || []))
       .catch(err => console.error("Erro ao carregar candidatos", err));
 
-    /* ================================
-      2️⃣ VAGAS (independente)
-      ================================ */
+    // Vagas
     fetch(`${BASE_URL}/jobs?user_id=${userId}`)
       .then(res => res.json())
       .then(data => setJobs(data.jobs || []))
       .catch(err => console.error("Erro ao carregar vagas", err));
+  }, []);
 
-    /* ================================
-      3️⃣ ENTREVISTA (depende de id)
-      ================================ */
-    if (id) {
-      fetch(`${BASE_URL}/interviews/${id}?user_id=${userId}`)
-        .then(res => {
-          if (!res.ok) throw new Error("Entrevista não encontrada");
-          return res.json();
-        })
-        .then(data => {
-          if (!data?.interview) {
-            throw new Error("Entrevista inválida ou não encontrada");
-          }
+  // ---------------------------------------------------------------------------
+  // Carrega dados da entrevista
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId || !id) return;
 
-          const item = data.interview;
+    fetch(`${BASE_URL}/interviews/${id}?user_id=${userId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Entrevista não encontrada");
+        return res.json();
+      })
+      .then(data => {
+        if (!data?.interview) return;
 
-          setForm({
-            job_title: item.job_title || "",
-            job_description: item.job_description || "",
-            notes: item.recruiter_notes || "",
-            interview_roadmap: item.interview_roadmap || "",
-            job_responsibilities: item.job_responsibilities || "",
-            company_values: item.company_values || ""
-          });
+        const item = data.interview;
 
-          setResultado({ text: item.transcript || "" });
-          setMetrics(item.metrics || null);
-
-          const parecerFinal = item.manual_review?.trim()
-            ? item.manual_review
-            : item.final_review;
-
-          setParecer(parecerFinal || null);
-          setParecerEditado(parecerFinal || "");
-          setFeedbackDado(item.review_feedback || null);
-          
-          if (!isNewInterview) {
-            setInterviewTypeId(item.interview_type_id ?? "none");
-            setJobId(item.job_id ?? "none");
-            setCandidateId(item.candidate_id ?? "none");
-            setCandidateName(item.candidate_name || "");
-          }
-
-          if (item.audio_path) {
-            setAudioUrl(`${BASE_URL}/uploads/${item.audio_path}`);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          setErro("Vaga não encontrada");
+        // Formulário
+        setForm({
+          job_title: item.job_title || "",
+          job_description: item.job_description || "",
+          notes: item.recruiter_notes || "",
+          interview_roadmap: item.interview_roadmap || "",
+          job_responsibilities: item.job_responsibilities || "",
+          company_values: item.company_values || ""
         });
+
+        // Transcrição e métricas
+        setResultado({ text: item.transcript || "" });
+        setMetrics(item.metrics || null);
+
+        // Parecer
+        const parecerFinal = item.manual_review?.trim()
+          ? item.manual_review
+          : item.final_review;
+
+        setParecer(parecerFinal || null);
+        setParecerEditado(parecerFinal || "");
+        setFeedbackDado(item.review_feedback || null);
+
+        // Preenche selects SOMENTE se houver vínculo salvo
+        if (item.job_id) setJobId(item.job_id);
+        if (item.candidate_id) {
+          setCandidateId(item.candidate_id);
+          setCandidateName(item.candidate_name || "");
+        }
+        if (item.interview_type_id) {
+          setInterviewTypeId(item.interview_type_id);
+        }
+
+        // Áudio
+        if (item.audio_path) {
+          setAudioUrl(`${BASE_URL}/uploads/${item.audio_path}`);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setErro("Entrevista não encontrada");
+      });
+  }, [id]);
+
+  // ---------------------------------------------------------------------------
+  // Carrega tipos de entrevista vinculados à vaga selecionada
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    // Se não houver vaga selecionada, limpa apenas o que depende dela
+    if (!jobId || jobId === "none") {
+      setInterviewTypes([]);
+      setInterviewTypeId("none");
+      return;
     }
 
-    /* ================================
-    4️⃣ TIPOS DA VAGA (depende de jobId)
-    ================================ */
-  if (jobId && jobId !== "none") {
     fetch(`${BASE_URL}/jobs/${jobId}/interview_types?user_id=${userId}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Erro ao buscar tipos da vaga");
+        }
+        return res.json();
+      })
       .then(data => {
         setInterviewTypes(data.types || []);
       })
       .catch(err => {
-        console.error("Erro ao carregar tipos da vaga", err);
+        console.error("Erro ao carregar tipos da vaga:", err);
         setInterviewTypes([]);
       });
-  } else {
-    // só limpa quando NÃO há vaga
-    setInterviewTypes([]);
-    setInterviewTypeId("none");
-  }
-  
-  }, [id, jobId]);
+  }, [jobId]);
+
+  // ---------------------------------------------------------------------------
+  // Ao selecionar uma vaga, preencher dados da vaga no formulário
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!jobId || jobId === "none") return;
+
+    const selectedJob = jobs.find(j => String(j.id) === String(jobId));
+    if (!selectedJob) return;
+
+    setForm(prev => ({
+      ...prev,
+      job_title: selectedJob.name || prev.job_title,
+      job_description: jobTouched
+        ? prev.job_description
+        : selectedJob.job_description || "",
+      job_responsibilities: jobTouched
+        ? prev.job_responsibilities
+        : selectedJob.job_responsibilities || ""
+    }));
+  }, [jobId, jobs, jobTouched]);
+
+
 
   function handleCandidateChange(value) {
     setCandidateId(value);
@@ -168,9 +204,7 @@ export default function InterviewTranscription() {
     setCandidateName(selected.name);
   }
 
-  // ---------------------------------------------------------------------------
   // Função utilitária para exibir tempos
-  // ---------------------------------------------------------------------------
   function formatTempoSeguro(valor) {
     return typeof valor === "number"
       ? valor > 59
@@ -364,51 +398,64 @@ export default function InterviewTranscription() {
     await handleFinish({ file });
   }
 
-  // Submeter parecer (CHAMA /review)
-  async function handleSubmitParecer(e) {
-    e.preventDefault();
-    setLoadingParecer(true);
-    setParecer(null);
+// Submeter parecer (CHAMA /review)
+async function handleSubmitParecer(e) {
+  e.preventDefault();
+  setLoadingParecer(true);
+  setParecer(null);
 
-    try {
+  try {
+    const res = await fetch(`${BASE_URL}/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        transcript: resultado?.text || "",
+        user_id: Number(localStorage.getItem("userId")),
 
-      const res = await fetch(`${BASE_URL}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          transcript: resultado?.text || "",
-          user_id: Number(localStorage.getItem("userId")),
-          interview_type_id: interviewTypeId === "none" ? null : Number(interviewTypeId),
-          job_id: jobId === "none" ? null : Number(jobId),
-          interview_script_id: interviewScriptId === "none" ? null : Number(interviewScriptId),
-          job_title: form.job_title,
-          job_description: form.job_description,
-          job_responsibilities: form.job_responsibilities,
-          interview_roadmap: form.interview_roadmap,
-          company_values: form.company_values,
-          notes: form.notes,
-          metrics: metrics || null,
-          audio_path: resultado?.audioPath || null,
-          candidate_id: candidateId === "none" ? null : Number(candidateId),
-          candidate_name: candidateName || null,
-        })
-      });
+        interview_type_id:
+          interviewTypeId === "none" ? null : Number(interviewTypeId),
+
+        job_id:
+          jobId === "none" ? null : Number(jobId),
+
+        // 🔥 ROTEIRO FINAL (fonte única de verdade)
+        interview_roadmap: form.interview_roadmap,
+
+        job_title: form.job_title,
+        job_description: form.job_description,
+        job_responsibilities: form.job_responsibilities,
+        company_values: form.company_values,
+        notes: form.notes,
+
+        metrics: metrics || null,
+        audio_path: resultado?.audioPath || null,
+
+        candidate_id:
+          candidateId === "none" ? null : Number(candidateId),
+
+        candidate_name: candidateName || null
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error("Erro ao gerar parecer");
+    }
 
     const json = await res.json();
+
     setParecer(json.review);
     setParecerEditado(json.review);
     setParecerEditando(false);
     setFeedbackDado(null);
 
-    } catch (err) {
-        console.error("Erro ao gerar parecer:", err);
-        setParecer("❌ Erro ao gerar parecer.");
-    } finally {
-      setLoadingParecer(false);
-    }
-
+  } catch (err) {
+    console.error("Erro ao gerar parecer:", err);
+    setParecer("❌ Erro ao gerar parecer.");
+  } finally {
+    setLoadingParecer(false);
   }
+}
 
 function handleInterviewTypeChange(value) {
   setInterviewTypeId(value);
@@ -667,12 +714,19 @@ function handleInterviewTypeChange(value) {
                     <label style={{ display: "block", marginBottom: 6 }}>
                       {label}
                     </label>
+
                     <textarea
                       required
                       value={form[key]}
-                      onChange={(e) =>
-                        setForm({ ...form, [key]: e.target.value })
-                      }
+                      onChange={(e) => {
+                        // Marca que o usuário editou manualmente
+                        setJobTouched(true);
+
+                        setForm(prev => ({
+                          ...prev,
+                          [key]: e.target.value
+                        }));
+                      }}
                       style={{
                         width: "100%",
                         height: 150,
@@ -687,11 +741,6 @@ function handleInterviewTypeChange(value) {
                   </div>
                 ))}
 
-              {/* Transcrição de áudio */}
-              
-              
-
-              
 
                 {interviewTypeId === "none" && (
                 <div style={{ marginBottom: 16 }}>
