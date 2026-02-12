@@ -61,6 +61,8 @@ export default function InterviewTranscription() {
   const [candidateId, setCandidateId] = useState("none");
   const [candidateName, setCandidateName] = useState("");
 
+  const [reviewFormat, setReviewFormat] = useState("completo");
+
   // ---------------------------------------------------------------------------
   // Carrega dados caso tenha ID na URL
   // ---------------------------------------------------------------------------
@@ -412,6 +414,8 @@ async function handleSubmitParecer(e) {
         id,
         transcript: resultado?.text || "",
         user_id: Number(localStorage.getItem("userId")),
+
+        review_format: reviewFormat,
 
         interview_type_id:
           interviewTypeId === "none" ? null : Number(interviewTypeId),
@@ -792,18 +796,31 @@ function handleInterviewTypeChange(value) {
 
               <h2>3. Gerar parecer</h2>  
 
-              {/* BOTÃO GERAR PARECER */}
-              <button
-                type="submit"
-                disabled={loadingParecer}
-                style={{ marginTop: 0, marginBottom: 20 }}
-              >
-                {loadingParecer
-                  ? "Gerando parecer..."
-                  : id
-                  ? "Gerar novo parecer"
-                  : "Gerar Parecer"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+  
+                <select
+                  className="input"
+                  value={reviewFormat}
+                  onChange={(e) => setReviewFormat(e.target.value)}
+                  style={{ width: 180 }}
+                >
+                  <option value="completo">Parecer Completo</option>
+                  <option value="simplificado">Parecer Simplificado</option>
+                </select>
+
+                <button
+                  type="submit"
+                  disabled={loadingParecer}
+                >
+                  {loadingParecer
+                    ? "Gerando parecer..."
+                    : id
+                    ? "Gerar novo parecer"
+                    : "Gerar Parecer"}
+                </button>
+
+              </div>
+
 
             </div>  
 
@@ -855,7 +872,7 @@ function handleInterviewTypeChange(value) {
                 readOnly={!parecerEditando}
                 style={{
                   width: "100%",
-                  height: 250,
+                  height: 600,
                   resize: "vertical",
                   padding: 8,
                   background: "var(--bg)",
