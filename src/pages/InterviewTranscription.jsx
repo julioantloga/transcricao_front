@@ -777,7 +777,7 @@ function handleInterviewTypeChange(value) {
 
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
-                    Parecer da pessoa recrutadora 
+                    Anotações da pessoa recrutadora 
                   </label>
                   <textarea
                     className="input_text"
