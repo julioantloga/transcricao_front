@@ -145,50 +145,58 @@ export default function EditJob() {
   }
 
   // ---------------------------------------------------------------------------
-  // IA — gerar textos da competência
-  // ---------------------------------------------------------------------------
-  async function handleGenerateCompetency(index) {
-    const userId = localStorage.getItem("userId");
-    const comp = newInterviewType.competencies[index];
+// IA — gerar textos da competência
+// ---------------------------------------------------------------------------
+async function handleGenerateCompetency(index) {
+  const userId = localStorage.getItem("userId");
+  const comp = newInterviewType.competencies[index];
 
-    if (!comp?.name) {
-      alert("Informe o nome da competência.");
-      return;
-    }
-
-    setGeneratingIndex(index);
-
-    try {
-      const res = await fetch(
-        `${BASE_URL}/interview_types/competencies/generate_texts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: userId,
-            interview_type_name: newInterviewType.name || name,
-            category: newInterviewType.category,
-            competency_name: comp.name
-          })
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok || !data.texts) throw new Error();
-
-      const updated = [...newInterviewType.competencies];
-      updated[index] = { ...updated[index], ...data.texts };
-
-      setNewInterviewType(prev => ({
-        ...prev,
-        competencies: updated
-      }));
-    } catch {
-      alert("Erro ao gerar descrição.");
-    } finally {
-      setGeneratingIndex(null);
-    }
+  if (!comp?.name) {
+    alert("Informe o nome da competência.");
+    return;
   }
+
+  setGeneratingIndex(index);
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/interview_types/competencies/generate_texts`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          interview_type_name: newInterviewType.name || name,
+          category: newInterviewType.category,
+          competency_name: comp.name,
+
+          // CONTEXTO DA VAGA
+          job_context: {
+            name,
+            job_description: jobDescription,
+            job_responsibilities: jobResponsibilities
+          }
+        })
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok || !data.texts) throw new Error();
+
+    const updated = [...newInterviewType.competencies];
+    updated[index] = { ...updated[index], ...data.texts };
+
+    setNewInterviewType(prev => ({
+      ...prev,
+      competencies: updated
+    }));
+  } catch {
+    alert("Erro ao gerar descrição.");
+  } finally {
+    setGeneratingIndex(null);
+  }
+}
+
 
   // ---------------------------------------------------------------------------
   // IA — sugerir competências (inline) com contexto da vaga
