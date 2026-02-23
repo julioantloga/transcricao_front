@@ -773,7 +773,7 @@ function handleInterviewTypeChange(value) {
                         setForm({ ...form, interview_roadmap: e.target.value })
                       }
                   />
-                </div>   
+                </div>
 
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
@@ -796,13 +796,16 @@ function handleInterviewTypeChange(value) {
 
               <h2>3. Gerar parecer</h2>  
 
-              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-  
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "block", marginBottom: 6, marginTop:12 }}>
+                  Selecione o template do parecer
+                </label>
+
                 <select
                   className="input"
                   value={reviewFormat}
                   onChange={(e) => setReviewFormat(e.target.value)}
-                  style={{ width: 180 }}
+                  style={{ display: "block", width: 240, marginBottom: 10 }}
                 >
                   <option value="completo">Parecer Completo</option>
                   <option value="simplificado">Parecer Simplificado</option>
@@ -820,7 +823,6 @@ function handleInterviewTypeChange(value) {
                 </button>
 
               </div>
-
 
             </div>  
 
